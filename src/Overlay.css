@@ -1,0 +1,47 @@
+.overlay-container{
+    background-color: white;
+    border-radius: 10px;
+    position: fixed;
+    z-index: 2;
+    transition: all 200ms ease-out 0ms;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+}
+
+.final-container{
+    width: 70vw;
+    height: 70vh;
+    left: 15vw;
+    top: 15vh;
+}
+
+.inital-container{
+    width: 0;
+    height: 0;
+    left: 50vw;
+    top: 50vh;
+}
+
+.cross-button{
+    margin-left: auto;
+    opacity: 0.5;
+    font-size: large;
+    background-color: transparent;
+}
+
+.cross-button:hover{
+    opacity: 1;
+}
+
+.activity-table{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 30px;
+}
+.activity-item{
+    border-bottom: 1px solid black;
+    padding: 10px;
+    width: 80%;
+}

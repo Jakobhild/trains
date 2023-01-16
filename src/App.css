@@ -37,6 +37,16 @@
   }
 }
 
+.backdrop{
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  z-index: 1;
+  opacity: 0.5;
+  background-color: black;
+  top: 0;
+}
+
 .train-listing{
   display: flex;
   border: solid 1px #646464;
@@ -47,6 +57,10 @@
   border-radius: 10px;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.train-listing:hover{
+  background-color: lightgrey;
 }
 
 @media only screen and (max-width: 600px) {

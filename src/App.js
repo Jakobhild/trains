@@ -1,10 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import { useEffect, useReducer, useState } from 'react';
-
-const getStationNames = (state, action) => {
-  
-}
+import Overlay from './Overlay.js';
 
 function App() {
   const [trains, setTrains] = useState([])
@@ -12,6 +9,8 @@ function App() {
   const [dayOfset, setDayOfset] = useState(0)
   const [stationsSignature, setStationsSignature] = useState([])
   const [stations, setStations] = useState([])
+  const [showOverlay, setShowOverlay] = useState(false)
+  const [overlayTrainIdent, setOverlayTrainIdent] = useState("")
 
   const tabIndicatorLocations = ["left", "center", "right"]
 
@@ -48,9 +47,18 @@ function App() {
     .then(data => setStations(data))
   }, [stationsSignature])
   
+  const showTrainOverlay = (trainIdent) => {
+    setShowOverlay(true)
+    console.log(trainIdent);
+    setOverlayTrainIdent(trainIdent)
+  }
 
   return (
     <div className="App">
+      {showOverlay && <>
+      <Overlay trainIdent={overlayTrainIdent} closeFunc={() => setShowOverlay(false)} dayOfset={dayOfset}/>
+      <div onClick={() => setShowOverlay(false)} className='backdrop'></div>
+      </>}
       <h1>Tåg:</h1>
       <div className='menu'>
         <div>
@@ -73,7 +81,7 @@ function App() {
       </div>
       <div className='schedule-container'>
         {trains.map((train) => 
-          <TrainListing className='schedule-item' key={train.ActivityId} stations={stations} train={train} /> 
+          <TrainListing className='schedule-item' key={train.ActivityId} stations={stations} train={train} showTrainOverlay={(trainIdent) => showTrainOverlay(trainIdent)} /> 
         )}
       </div>
     </div>
@@ -101,7 +109,7 @@ function TrainListing(props) {
   }, [])
 
   return (
-    <div className='train-listing'>
+    <div className='train-listing' onClick={() => props.showTrainOverlay(props.train.AdvertisedTrainIdent)}>
       <div style={{display: "flex", alignItems: "center"}}>
         <h1 style={{fontSize: "20px", margin: "0"}}>
         {late==="Försenat" ? <span><span style={{textDecorationLine: "line-through", opacity: 0.5}}>{advertisedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span> {actualTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span> : advertisedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
