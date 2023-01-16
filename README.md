@@ -11,7 +11,7 @@ I use a server side API to process the information from the original API(trafikv
 ## Shortcomings
 
 - Curently only works with lines running between Stockholm and Örebro and vice-versa (namned track/type 1 and 2)
-- The overlay window is empty only showing the train number
+- The overlay window shows all activity for train in list (not very nice looking)
 
 
 # Getting Started with Create React App
