@@ -14,7 +14,7 @@ function Overlay(props){
     }, [])
 
     useEffect(() => {
-        fetch('http://94.254.40.120:5000/trainid/' + props.trainIdent + "&" + props.dayOfset)
+        fetch('http://[IP-adress]:5000/trainid/' + props.trainIdent + "&" + props.dayOfset)
         .then(res => res.json())
         .then(data => {
             setTrainInfo(data)
@@ -29,7 +29,7 @@ function Overlay(props){
     }, [])
 
     useEffect(() => {
-        fetch('http://94.254.40.120:5000/stations', {
+        fetch('http://[IP-adress]:5000/stations', {
           method: 'POST',
           body: JSON.stringify({stations: stationsSignature}),
           headers: {'Content-Type': 'application/json'},
