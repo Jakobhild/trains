@@ -16,7 +16,7 @@ function App() {
   const tabIndicatorLocations = ["left", "center", "right"]
 
   useEffect(() => {
-    fetch('http://192.168.1.203:5000/'+ type + '&' + dayOfset)
+    fetch('http://94.254.40.120:5000/'+ type + '&' + dayOfset)
       .then((response) => response.json())
       .then((data) => {
         setTrains(data);
@@ -39,7 +39,7 @@ function App() {
   }, [type, dayOfset])
 
   useEffect(() => {
-    fetch('http://192.168.1.203:5000/stations', {
+    fetch('http://94.254.40.120:5000/stations', {
       method: 'POST',
       body: JSON.stringify({stations: stationsSignature}),
       headers: {'Content-Type': 'application/json'},
