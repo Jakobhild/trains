@@ -14,8 +14,10 @@ function App() {
 
   const tabIndicatorLocations = ["left", "center", "right"]
 
+  const ip = 'IP'
+
   useEffect(() => {
-    fetch('http://[IP-adress]:5000/'+ type + '&' + dayOfset)
+    fetch('http://' + ip + '/'+ type + '&' + dayOfset)
       .then((response) => response.json())
       .then((data) => {
         setTrains(data);
@@ -38,7 +40,7 @@ function App() {
   }, [type, dayOfset])
 
   useEffect(() => {
-    fetch('http://[IP-adress]:5000/stations', {
+    fetch('http://' + ip + '/stations', {
       method: 'POST',
       body: JSON.stringify({stations: stationsSignature}),
       headers: {'Content-Type': 'application/json'},
@@ -53,10 +55,18 @@ function App() {
     setOverlayTrainIdent(trainIdent)
   }
 
+  const getFromStation = () => {
+    if(type === 1){
+      return "Cst"
+    }else{
+      return "Ör"
+    }
+  }
+
   return (
     <div className="App">
       {showOverlay && <>
-      <Overlay trainIdent={overlayTrainIdent} closeFunc={() => setShowOverlay(false)} dayOfset={dayOfset}/>
+      <Overlay ip={ip} trainIdent={overlayTrainIdent} closeFunc={() => setShowOverlay(false)} dayOfset={dayOfset}/>
       <div onClick={() => setShowOverlay(false)} className='backdrop'></div>
       </>}
       <h1>Tåg:</h1>
@@ -81,7 +91,7 @@ function App() {
       </div>
       <div className='schedule-container'>
         {trains.map((train) => 
-          <TrainListing className='schedule-item' key={train.ActivityId} stations={stations} train={train} showTrainOverlay={(trainIdent) => showTrainOverlay(trainIdent)} /> 
+          <TrainListing ip={ip} className='schedule-item' key={train.ActivityId} fromStation={() => getFromStation()} dayOfset={dayOfset} stations={stations} train={train} showTrainOverlay={(trainIdent) => showTrainOverlay(trainIdent)} /> 
         )}
       </div>
     </div>
@@ -91,6 +101,7 @@ function App() {
 function TrainListing(props) {
   const [late, setLate] = useState(false)
   const [dotColor, setDotColor] = useState("yellow")
+  const [depatureTime, setDepatureTime] = useState({})
 
   const advertisedTime = new Date(Date.parse(props.train.AdvertisedTimeAtLocation))
   const actualTime = new Date(Date.parse(props.train.TimeAtLocation))
@@ -106,7 +117,21 @@ function TrainListing(props) {
       setLate("Inställt")
       setDotColor("red")
     }
+    fetch('http://' + props.ip + '/trainid/' + props.train.AdvertisedTrainIdent + "&" + props.dayOfset)
+        .then(res => res.json())
+        .then(data => {
+          data.map((location) => {
+            if(location.LocationSignature === props.fromStation()){
+              setDepatureTime(location)
+            }
+          }) 
+        })
   }, [])
+
+  const timeFromString = (timeString) => {
+    const time = new Date(Date.parse(timeString))
+    return time
+  }
 
   return (
     <div className='train-listing' onClick={() => props.showTrainOverlay(props.train.AdvertisedTrainIdent)}>
@@ -124,7 +149,7 @@ function TrainListing(props) {
         <span style={{marginRight: "5px"}}>Från</span>
         {props.stations.map((station) => 
           <>{station.signature === props.train.FromLocation[0].LocationName && <span key={0}>{station.name}</span>}</>
-        )}
+        )}<span>  ({timeFromString(depatureTime.AdvertisedTimeAvgang).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})</span>
         <span className='left-aligned'>Tåg nr. {props.train.AdvertisedTrainIdent}</span>
       </div>
       <div style={{display: "flex"}}>
