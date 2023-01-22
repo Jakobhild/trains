@@ -14,7 +14,7 @@ function Overlay(props){
     }, [])
 
     useEffect(() => {
-        fetch('http://' + props.ip + '/trainid/' + props.trainIdent + "&" + props.dayOfset)
+        fetch('http://' + props.ip + '/trainid/' + props.trainIdent + "&" + props.date)
         .then(res => res.json())
         .then(data => {
             setTrainInfo(data)
@@ -52,20 +52,22 @@ function Overlay(props){
                 <th>Ankomst</th>
                 <th>Avgång</th>
                 <th>Station</th>
+                <th>Spår</th>
             </tr>
             {trainInfo.map((location) => 
                 <tr className='activity-item'>
                     {location.AdvertisedTimeAnkomst !== "" ? (<td>
-                        {timeFromString(location.ActuallTimeAnkomst) - timeFromString(location.AdvertisedTimeAnkomst) > 120*1000 && <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{timeFromString(location.AdvertisedTimeAnkomst).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span>}
+                        {timeFromString(location.ActuallTimeAnkomst) - timeFromString(location.AdvertisedTimeAnkomst) > 60*1000 && <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{timeFromString(location.AdvertisedTimeAnkomst).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span>}
                         {timeFromString(location.ActuallTimeAnkomst).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </td>) : <td></td>}
                     {location.AdvertisedTimeAvgang !== "" ? (<td>
-                        {timeFromString(location.ActuallTimeAvgang) - timeFromString(location.AdvertisedTimeAvgang) > 120*1000 && <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{timeFromString(location.AdvertisedTimeAvgang).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span>}
+                        {timeFromString(location.ActuallTimeAvgang) - timeFromString(location.AdvertisedTimeAvgang) > 60*1000 && <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{timeFromString(location.AdvertisedTimeAvgang).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span>}
                         {timeFromString(location.ActuallTimeAvgang).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </td>) : <td></td>}
                     {stations.map((station) => 
                         <>{station.signature === location.LocationSignature && <td key={0}>{station.name}</td>}</>
                     )}
+                    <td>{location.Track}</td>
                 </tr>
             )}
         </table>
