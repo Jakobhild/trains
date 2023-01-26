@@ -49,8 +49,8 @@ function Overlay(props){
         <h1>Tåg nr. {props.trainIdent}</h1>
         <table className='activity-table'>
             <tr>
-                <th>Ankomst</th>
-                <th>Avgång</th>
+                <th className="time-column">Ank</th>
+                <th className="time-column">Avg</th>
                 <th>Station</th>
                 <th>Spår</th>
             </tr>
@@ -64,9 +64,20 @@ function Overlay(props){
                         {timeFromString(location.ActuallTimeAvgang) - timeFromString(location.AdvertisedTimeAvgang) > 60*1000 && <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{timeFromString(location.AdvertisedTimeAvgang).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span>}
                         {timeFromString(location.ActuallTimeAvgang).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </td>) : <td></td>}
-                    {stations.map((station) => 
-                        <>{station.signature === location.LocationSignature && <td key={0}>{station.name}</td>}</>
-                    )}
+                    <td className="station-column">
+                        <div style={{textAlign: "left", marginLeft: "20%"}}>
+                            {stations.map((station) => 
+                                <>{station.signature === location.LocationSignature && <span style={{fontWeight: "bold"}}>{station.name}</span>}</>
+                            )}
+                            <br />
+                            <span>
+                            {location.Deviation.map((description, index) => <>
+                                {description} 
+                                {index < location.Deviation.length - 1 && <br />}
+                            </>)}
+                            </span>
+                        </div>
+                    </td>
                     <td>{location.Track}</td>
                 </tr>
             )}

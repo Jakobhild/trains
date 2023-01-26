@@ -37,11 +37,30 @@
 .activity-table{
     width: 90%;
     margin: auto;
+    border-collapse: collapse;
 }
 
 td{
-    border: 1px solid black;
     padding: 10px;
-    width: 30%;
 }
+
+.time-column{
+    width: 5ch;
+}
+
+td{
+    border-bottom: 1px solid gray;
+}
+
+@media only screen and (max-width: 600px) {
+    .final-container{
+        width: 100vw;
+        left: 0;
+        top: 0;
+        height: 100vh;
+    }
+    .activity-table{
+        width: 100%;
+    }
+  }
 

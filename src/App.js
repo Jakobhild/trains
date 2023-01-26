@@ -15,7 +15,7 @@ function App() {
 
   const tabIndicatorLocations = ["left", "center", "right"]
 
-  const ip = 'IP'
+  const ip = 'ip'
 
   useEffect(() => {
     fetch('http://' + ip + '/'+ type + '&' + dayOfset)
@@ -129,7 +129,7 @@ function TrainListing(props) {
       setDotColor("red")
     }
     if(props.train.Canceled){
-      setLate("Inställt")
+      setLate(props.train.Deviation[0].Description)
       setDotColor("red")
     }
     fetch('http://' + props.ip + '/trainid/' + props.train.AdvertisedTrainIdent + "&" + props.train.ScheduledDepartureDateTime)
