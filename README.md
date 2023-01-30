@@ -1,17 +1,18 @@
 # React project train arivals
 
-Small application for showing train arrivals running on a specific line on swedish railways. Built around trafikverket API.
+Small application for showing train arrivals running on a specific line on swedish railways. 
 
 Much of the graphics is inspired by SJ.se.
 
 ## API
 
-I use a server side API to process the information from the original API(trafikverket) to cut down on client side computing. But this app should not need that much tweeking to work directly with trafikverket API.
+Built around Trafikverket Open API.
 
 ## Shortcomings
 
-- Curently only works with lines running between Stockholm and Örebro and vice-versa (namned track/type 1 and 2)
-- The overlay window shows all activity for train in list (not very nice looking)
+- You need an API key from Trafikverket Open API in an .env file
+- Only works with direct lines (No changes)
+- Can't handle wrongful user input
 
 
 # Getting Started with Create React App
