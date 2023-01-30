@@ -1,0 +1,95 @@
+.sidebar-container{
+    position: fixed;
+    top: 0;
+    width: 30vw;
+    height: 100vh;
+    background-color: white;
+    z-index: 2;
+    transition: all 200ms ease-out 0ms;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-container-final{
+    left: 0;
+}
+
+.sidebar-container-inital{
+    left: -30vw
+}
+
+.sidebar-content-container{
+    display: flex;
+    flex-direction: column;
+    padding: 10%;
+    justify-content: space-around;
+    height: 15vh;
+}
+
+.cross-button{
+    margin-left: auto;
+    opacity: 0.5;
+    font-size: large;
+    background-color: transparent;
+}
+
+.cross-button:hover{
+    opacity: 1;
+}
+
+.station-input{
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid grey;
+}
+
+.input-title{
+    font-weight: bold;
+    margin-right: auto;
+    margin-bottom: 5px;
+}
+
+label, form{
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+}
+
+.submit-button{
+    padding: 10px;
+    background-color: green;
+    color: white;
+    border-radius: 10px;
+}
+
+.recommendation-box{
+    z-index: 4;
+    position: absolute;
+    background-color: whitesmoke;
+    width: calc(80% - 40px);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.recommendation-item{
+    width: 100%;
+    padding: 15px 0 15px 0
+}
+
+.recommendation-item:hover{
+    background-color: lightgrey;
+}
+
+@media only screen and (max-width: 600px) {
+    .sidebar-container{
+        width: 100vw;
+    }
+    .sidebar-container-inital{
+        left: -100vw;
+    }
+    .station-input{
+        font-size: 16px;
+    }
+  }
+

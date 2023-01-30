@@ -1,7 +1,10 @@
 import logo from './logo.svg';
+import sidebarBtn from './sidebar-btn.png';
 import './App.css';
 import { useEffect, useReducer, useState } from 'react';
 import Overlay from './Overlay.js';
+import { getTrains, getStations, getTrainById } from './utils';
+import Sidebar from './Sidebar';
 
 function App() {
   const [trains, setTrains] = useState([])
@@ -12,17 +15,17 @@ function App() {
   const [showOverlay, setShowOverlay] = useState(false)
   const [overlayTrainIdent, setOverlayTrainIdent] = useState("")
   const [overlayTrainDepDate, setOverlayTrainDepDate] = useState("")
+  const [showSidebar, setShowSidebar] = useState(false)
+  const [fromTo, setFromTo] = useState(["Cst", "Ör"])
+  const [fromToNames, setFromToNames] = useState(["Stockholm C", "Örebro C"])
 
   const tabIndicatorLocations = ["left", "center", "right"]
 
-  const ip = 'ip'
-
   useEffect(() => {
-    fetch('http://' + ip + '/'+ type + '&' + dayOfset)
-      .then((response) => response.json())
-      .then((data) => {
-        setTrains(data);
-        let stationsArr = []
+    getTrains(type, dayOfset, fromTo[0], fromTo[1]).then((data) => {
+      setTrains(data);
+      let stationsArr = []
+      if(data){
         data.map((train) => {
           if(!stationsArr.includes(train.FromLocation[0].LocationName)){
             stationsArr.push(train.FromLocation[0].LocationName)
@@ -30,47 +33,49 @@ function App() {
           if(!stationsArr.includes(train.ToLocation[0].LocationName)){
             stationsArr.push(train.ToLocation[0].LocationName)
           }
-          train.ViaFromLocation.map((location) => {
-            if(!stationsArr.includes(location.LocationName)){
-              stationsArr.push(location.LocationName)
-            }
-          }) 
+          if(train.ViaFromLocation){
+            train.ViaFromLocation.map((location) => {
+              if(!stationsArr.includes(location.LocationName)){
+                stationsArr.push(location.LocationName)
+              }
+            }) 
+          }
         })
-        setStationsSignature(stationsArr)
-      })
-  }, [type, dayOfset])
+      }
+      if(!stationsArr.includes(fromTo[0])){
+        stationsArr.push(fromTo[0])
+      }
+      if(!stationsArr.includes(fromTo[1])){
+        stationsArr.push(fromTo[1])
+      }
+      setStationsSignature(stationsArr)
+    })
+  }, [type, dayOfset, fromTo])
 
   useEffect(() => {
-    fetch('http://' + ip + '/stations', {
-      method: 'POST',
-      body: JSON.stringify({stations: stationsSignature}),
-      headers: {'Content-Type': 'application/json'},
+    getStations(stationsSignature)
+    .then(data => {
+      setStations(data)
     })
-    .then(res => res.json())
-    .then(data => setStations(data))
   }, [stationsSignature])
   
   const showTrainOverlay = (trainIdent, depDate) => {
     setShowOverlay(true)
-    console.log(trainIdent);
     setOverlayTrainIdent(trainIdent)
     setOverlayTrainDepDate(depDate)
   }
 
-  const getFromStation = () => {
-    if(type === 1){
-      return "Cst"
-    }else{
-      return "Ör"
-    }
-  }
 
   return (
     <div className="App">
+      <img src={sidebarBtn} className='sidebar-button' onClick={() => setShowSidebar(true)}></img>
       {showOverlay && <>
-      <Overlay ip={ip} trainIdent={overlayTrainIdent} closeFunc={() => setShowOverlay(false)} date={overlayTrainDepDate}/>
-      <div onClick={() => setShowOverlay(false)} className='backdrop'></div>
+      <Overlay trainIdent={overlayTrainIdent} closeFunc={() => setShowOverlay(false)} date={overlayTrainDepDate}/>
       </>}
+      {showSidebar && <>
+        <Sidebar closeFunc={() => setShowSidebar(false)} setFromTo={(fromTo) => setFromTo(fromTo)} setFromToNames={(fromToNames) => setFromToNames(fromToNames)} />
+      </>}
+      
       <h1>Tåg:</h1>
       <div className='menu'>
         <div>
@@ -85,16 +90,26 @@ function App() {
       <div className='menu'>
         <div>
           <div className='tabs'>
-          <button className={type === 1 ? 'track-tab selected' : 'track-tab'} onClick={() => setType(1)}>Stockholm - Örebro</button>
-            <button className={type === 2 ? 'track-tab selected' : 'track-tab'} onClick={() => setType(2)}>Örebro - Stockholm</button>
+            <button className={type === 2 ? 'track-tab selected' : 'track-tab'} onClick={() => setType(2)}>
+              {fromToNames[0]}
+              <span> - </span>
+              {fromToNames[1]}
+            </button>
+            <button className={type === 1 ? 'track-tab selected' : 'track-tab'} onClick={() => setType(1)}>
+              {fromToNames[1]}
+              <span> - </span>
+              {fromToNames[0]}
+          </button>
           </div>
           <div className={'tab-indicator track-tab-indicator track-' + tabIndicatorLocations[type]}></div>
         </div>
       </div>
       <div className='schedule-container'>
-        {trains.map((train) => 
-          <TrainListing ip={ip} className='schedule-item' key={train.ActivityId} fromStation={() => getFromStation()} dayOfset={dayOfset} stations={stations} train={train} showTrainOverlay={(trainIdent, depDate) => showTrainOverlay(trainIdent, depDate)} /> 
-        )}
+        {trains ? <>
+          {trains.map((train) => 
+            <TrainListing className='schedule-item' key={train.ActivityId} fromStation={type === 1 ? fromTo[1] : fromTo[0]} dayOfset={dayOfset} stations={stations} train={train} showTrainOverlay={(trainIdent, depDate) => showTrainOverlay(trainIdent, depDate)} /> 
+          )}
+        </> : <p>Det finns inga tåg som går vald sträcka</p>}  
       </div>
     </div>
   );
@@ -132,14 +147,13 @@ function TrainListing(props) {
       setLate(props.train.Deviation[0].Description)
       setDotColor("red")
     }
-    fetch('http://' + props.ip + '/trainid/' + props.train.AdvertisedTrainIdent + "&" + props.train.ScheduledDepartureDateTime)
-        .then(res => res.json())
+        getTrainById(props.train.AdvertisedTrainIdent, props.train.ScheduledDepartureDateTime)
         .then(data => {
           data.map((location) => {
-            if(location.LocationSignature === props.fromStation()){
+            if(location.LocationSignature === props.fromStation){
               let dep = {
                 advertisedTime: timeFromString(location.AdvertisedTimeAvgang),
-                actualTime: timeFromString(location.ActuallTimeAnkomst),
+                actualTime: timeFromString(location.ActuallTimeAvgang),
                 track: location.Track
               }
               setDepature(dep)
@@ -196,17 +210,20 @@ function TrainListing(props) {
       {/*Line three----------------------------------------------------------------------------------- */}
       <div style={{display: "flex"}}>
         
-        <span className='no-mobile'>
-          <span style={{marginRight: "5px"}}>Via</span>
-          {props.train.ViaFromLocation.map((viaStation) => 
-          <span key={viaStation.Order}>
-            {props.stations.map((station) => 
-              <>{station.signature === viaStation.LocationName && <>{station.name}</>}</>
-            )}
-            {viaStation.Order < props.train.ViaFromLocation.length - 2 && <>, </>} 
-            {viaStation.Order === props.train.ViaFromLocation.length - 2 && <> och </>}
-          </span>)}
-        </span>
+      {props.train.ViaFromLocation ? 
+      <span className='no-mobile'>
+        <span style={{marginRight: "5px"}}>Via</span>
+        {props.train.ViaFromLocation.map((viaStation) => 
+        <span key={viaStation.Order}>
+          {props.stations.map((station) => 
+            <>{station.signature === viaStation.LocationName && <>{station.name}</>}</>
+          )}
+          {viaStation.Order < props.train.ViaFromLocation.length - 2 && <>, </>} 
+          {viaStation.Order === props.train.ViaFromLocation.length - 2 && <> och </>}
+        </span>)}
+      </span> : <span>Direkt</span>
+      }
+        
 
         <span className='mobile-only'>
           <span> Från </span>

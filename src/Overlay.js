@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
+import { getStations, getTrainById } from './utils';
 import './Overlay.css';
 
 function Overlay(props){
     const [containerClass, setContainerClass] = useState('overlay-container inital-container')
+    const [backdrop, setBackdrop] = useState(false)
     const [trainInfo, setTrainInfo] = useState([])
     const [stationsSignature, setStationsSignature] = useState([])
     const [stations, setStations] = useState([])
 
     useEffect(() => {
-        setTimeout(() => {
-            setContainerClass('overlay-container final-container')
-        }, 1)
+        setContainerClass('overlay-container final-container')
+        setBackdrop(true)
     }, [])
 
     useEffect(() => {
-        fetch('http://' + props.ip + '/trainid/' + props.trainIdent + "&" + props.date)
-        .then(res => res.json())
+        getTrainById(props.trainIdent, props.date)
         .then(data => {
             setTrainInfo(data)
             let stationsArr = []
@@ -29,12 +29,7 @@ function Overlay(props){
     }, [])
 
     useEffect(() => {
-        fetch('http://' + props.ip + '/stations', {
-          method: 'POST',
-          body: JSON.stringify({stations: stationsSignature}),
-          headers: {'Content-Type': 'application/json'},
-        })
-        .then(res => res.json())
+        getStations(stationsSignature)
         .then(data => setStations(data))
       }, [stationsSignature])
 
@@ -42,12 +37,19 @@ function Overlay(props){
         const time = new Date(Date.parse(timeString))
         return time
     }
+    const exit = () => {
+        setContainerClass("overlay-container inital-container")
+        setBackdrop(false)
+        setTimeout(() => props.closeFunc(), 200);
+    }
 
-    return(
+    return(<>
+    <div onClick={() => exit()} className='backdrop' style={!backdrop ? {opacity: 0} : {}}></div>
     <div className={containerClass}>
-        <button className='cross-button' onClick={() => props.closeFunc()}>X</button>
+        <button className='cross-button' onClick={() => exit()}>X</button>
         <h1>Tåg nr. {props.trainIdent}</h1>
         <table className='activity-table'>
+            <tbody>
             <tr>
                 <th className="time-column">Ank</th>
                 <th className="time-column">Avg</th>
@@ -81,8 +83,9 @@ function Overlay(props){
                     <td>{location.Track}</td>
                 </tr>
             )}
+            </tbody>
         </table>
-    </div>)
+    </div></>)
 }
 
 export default Overlay;
