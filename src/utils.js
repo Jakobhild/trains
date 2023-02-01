@@ -4,6 +4,13 @@ import { getById } from "./getTrainById";
 import { getStationSign } from "./getStationSign";
 
 export const getTrains = async (type, dayOfset, station1, station2) => {
+    const now = new Date();
+    window.sessionStorage.setItem(station1 + station2 + type, "value");
+
+    if(window.sessionStorage.getItem(station1 + station2 + type)){
+        window.alert(sessionStorage.getItem(station1 + station2 + type));
+    }
+
     const trainIdents = await getTrainIdents(station1, station2, dayOfset)
     
     if(type === 1){

@@ -1,7 +1,9 @@
 export const getTrainInfo = async (station, dateOfset, trainIdents) => {
-    const now = new Date();
+    var now = new Date();
 
-    let d = now.getDate() + dateOfset + "";
+    now.setDate(now.getDate() + dateOfset)
+
+    let d = now.getDate() + "";
     if(d < 10){
         d = "0" + d
     }
@@ -35,9 +37,11 @@ export const getTrainInfo = async (station, dateOfset, trainIdents) => {
 export const getTrainIdents = async (station1r, station2r, dateOfset) => {
     var station1 = station1r
     var station2 = station2r
-    const now = new Date();
+    var now = new Date();
 
-    let d = now.getDate() + dateOfset + "";
+    now.setDate(now.getDate() + dateOfset)
+
+    let d = now.getDate() + "";
     if(d < 10){
         d = "0" + d
     }
@@ -83,7 +87,7 @@ export const getTrainIdents = async (station1r, station2r, dateOfset) => {
 
     req = "<REQUEST>" + 
                     "<LOGIN authenticationkey='" + process.env.REACT_APP_API_KEY + "' />" +
-                    "<QUERY objecttype='TrainAnnouncement' schemaversion='1.8' limit='100' orderby='AdvertisedTimeAtLocation asc'>" +
+                    "<QUERY objecttype='TrainAnnouncement' schemaversion='1.8' limit='1000' orderby='AdvertisedTimeAtLocation asc'>" +
                         "<FILTER>" +
                             "<EQ name='LocationSignature' value='" + station2 + "' />" +
                             "<EQ name='Advertised' value='true' />" +

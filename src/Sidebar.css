@@ -62,14 +62,25 @@ label, form{
     border-radius: 10px;
 }
 
+.recomendation-box-container{
+    perspective: 0px;
+    width: 100%
+}
+
 .recommendation-box{
     z-index: 4;
     position: absolute;
     background-color: whitesmoke;
-    width: calc(80% - 40px);
     border-radius: 10px;
+    width: 100%;
     display: flex;
     flex-direction: column;
+    transition: transform 300ms linear 0ms;
+    transform-origin: top;
+}
+
+.recommendation-box-inital{
+    transform: rotateX(-90deg);
 }
 
 .recommendation-item{

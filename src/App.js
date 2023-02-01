@@ -22,6 +22,7 @@ function App() {
   const tabIndicatorLocations = ["left", "center", "right"]
 
   useEffect(() => {
+    
     getTrains(type, dayOfset, fromTo[0], fromTo[1]).then((data) => {
       setTrains(data);
       let stationsArr = []

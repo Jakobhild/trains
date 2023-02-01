@@ -63,12 +63,12 @@ function Sidebar(props){
                         <label>
                         <span className='input-title'>Från:<br /></span>
                         <input className='station-input' name='from' autoComplete='off' placeholder='Ex. Stockholm C' value={fromStationName} onChange={e => {setFromStationName(e.target.value); setFromStationSign("")}} onSelect={e => setFromStationSelected(true)} onBlur={e => setTimeout(() => {setFromStationSelected(false)}, 150)}/>
-                        {fromStationSelected && fromStationName ? <div><RecommendationBox station={fromStationName} setStation={(name, sign) => setFromStation(name, sign)} /></div>:<></>}
+                        {fromStationSelected && fromStationName ? <div className='recomendation-box-container'><RecommendationBox station={fromStationName} setStation={(name, sign) => setFromStation(name, sign)} /></div>:<></>}
                         </label>
                         <label>
                         <span className='input-title'>Till:<br /></span>
                         <input className='station-input' name='to' autoComplete='off' placeholder='Ex. Göteborg C' value={toStationName} onChange={e => {setToStationName(e.target.value); setToStationSign("")}} onSelect={e => setToStationSelected(true)} onBlur={e => setTimeout(() => {setToStationSelected(false)}, 150)}/>
-                        {toStationSelected && toStationName ? <div><RecommendationBox station={toStationName} setStation={(name, sign) => setToStation(name, sign)} /></div>:<></>}
+                        {toStationSelected && toStationName ? <div className='recomendation-box-container'><RecommendationBox station={toStationName} setStation={(name, sign) => setToStation(name, sign)} /></div>:<></>}
                         </label>
                         <br />
                         <button type='submit' className='submit-button'>Sök trafikinfo</button>
@@ -82,6 +82,11 @@ function Sidebar(props){
 function RecommendationBox(props){
     const rek = ["Stockholm C", "Göteborg C", "Örebro C"]
     const [ recommendations, setRecommendations ] = useState([])
+    const [ boxClass, setBoxClass ] = useState("recommendation-box recommendation-box-inital")
+
+    useEffect(() => {
+        setBoxClass("recommendation-box")
+    }, [])
 
     useEffect(() => {
         getStationSigns(props.station).then((data) => {
@@ -91,7 +96,7 @@ function RecommendationBox(props){
     }, [props.station])
 
     return (
-        <div className='recommendation-box'>
+        <div className={boxClass}>
             {recommendations.map((recommendation) => 
                 <div className='recommendation-item' onClick={() => props.setStation(recommendation.AdvertisedLocationName, recommendation.LocationSignature)}>{recommendation.AdvertisedLocationName}</div>
             )}
