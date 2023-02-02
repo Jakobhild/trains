@@ -56,8 +56,8 @@ function Overlay(props){
                 <th>Station</th>
                 <th>Spår</th>
             </tr>
-            {trainInfo.map((location) => 
-                <tr className='activity-item'>
+            {trainInfo.map((location, index) => 
+                <tr className='activity-item' key={index}>
                     {location.AdvertisedTimeAnkomst !== "" ? (<td>
                         {timeFromString(location.ActuallTimeAnkomst) - timeFromString(location.AdvertisedTimeAnkomst) > 60*1000 && <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{timeFromString(location.AdvertisedTimeAnkomst).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span>}
                         {timeFromString(location.ActuallTimeAnkomst).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
@@ -68,15 +68,13 @@ function Overlay(props){
                     </td>) : <td></td>}
                     <td className="station-column">
                         <div style={{textAlign: "left", marginLeft: "20%"}}>
-                            {stations.map((station) => 
-                                <>{station.signature === location.LocationSignature && <span style={{fontWeight: "bold"}}>{station.name}</span>}</>
-                            )}
+                        {stations[stations.findIndex((station) => station.signature === location.LocationSignature)] && <span style={{fontWeight: "bold"}}>{stations[stations.findIndex((station) => station.signature === location.LocationSignature)].name}</span>}
                             <br />
                             <span>
-                            {location.Deviation.map((description, index) => <>
+                            {location.Deviation.map((description, index) => <span key={index}>
                                 {description} 
                                 {index < location.Deviation.length - 1 && <br />}
-                            </>)}
+                            </span>)}
                             </span>
                         </div>
                     </td>
