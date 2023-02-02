@@ -1,24 +1,50 @@
 import { getTrainInfo, getTrainIdents } from "./getTrains";
 import { getStationNames } from "./getStationNames";
-import { getById } from "./getTrainById";
+import { getById, getByIdAndStation } from "./getTrainById";
 import { getStationSign } from "./getStationSign";
 
 export const getTrains = async (type, dayOfset, station1, station2) => {
     const now = new Date();
-    window.sessionStorage.setItem(station1 + station2 + type, "value");
+    
 
-    if(window.sessionStorage.getItem(station1 + station2 + type)){
-        window.alert(sessionStorage.getItem(station1 + station2 + type));
+    if(window.sessionStorage.getItem(station1 + station2 + type + dayOfset)){
+        let sessionObject = JSON.parse(window.sessionStorage.getItem(station1 + station2 + type + dayOfset))
+        if(Date.parse(sessionObject.expiresAt) > Date.parse(now)){
+            return sessionObject.data
+        }else{
+            sessionStorage.removeItem(station1 + station2 + type + dayOfset)
+        }
     }
 
     const trainIdents = await getTrainIdents(station1, station2, dayOfset)
     
+    var expire = new Date()
+    expire.setMinutes(now.getMinutes() + 5)
+
     if(type === 1){
-        const data = await getTrainInfo(station1, dayOfset, trainIdents[1])
-        return data.RESPONSE.RESULT[0].TrainAnnouncement
+        const data = await getTrainInfo(station1, dayOfset, trainIdents[1], station2)
+
+        const sortedData = sortTrains(data.RESPONSE.RESULT[0].TrainAnnouncement)
+
+        let sessionObject = {
+            expiresAt: expire,
+            data: sortedData
+        }
+
+
+        window.sessionStorage.setItem(station1 + station2 + type + dayOfset, JSON.stringify(sessionObject));
+        return sortedData
     } else {
-        const data = await getTrainInfo(station2, dayOfset, trainIdents[0])
-        return data.RESPONSE.RESULT[0].TrainAnnouncement
+        const data = await getTrainInfo(station2, dayOfset, trainIdents[0], station1)
+
+        const sortedData = sortTrains(data.RESPONSE.RESULT[0].TrainAnnouncement)
+
+        let sessionObject = {
+            expiresAt: expire,
+            data: sortedData
+        }
+        window.sessionStorage.setItem(station1 + station2 + type + dayOfset, JSON.stringify(sessionObject));
+        return sortedData
     }
 }
 
@@ -26,17 +52,40 @@ export const getStations = async (stations) => {
     if(stations.length === 0){
         return []
     }
-    const data = await getStationNames(stations)
-    const stationNames = data.RESPONSE.RESULT[0].TrainStation
-    if(stationNames === undefined){
-        return []
+    var newStations = []
+    var response = [{}]
+    if(window.sessionStorage.getItem("stations")){
+        let sessionObject = JSON.parse(window.sessionStorage.getItem("stations"))
+        for(let i = 0; i < stations.length; i++){
+            let saved = false
+            for(let j = 0; j < sessionObject.length; j++){
+                if(sessionObject[j].signature === stations[i]){
+                    saved = true;
+                    break
+                }
+            }
+            if(!saved){
+                newStations.push(stations[i])
+            }
+        }
+        response = sessionObject
     }else{
-    var response = [{signature: stationNames[0].LocationSignature, name: stationNames[0].AdvertisedLocationName}]
-    for(let i = 1; i < stationNames.length; i++){
-        response.push({signature: stationNames[i].LocationSignature, name: stationNames[i].AdvertisedLocationName})
+        newStations = stations
+    }
+    if(newStations.length > 0){
+        const data = await getStationNames(newStations)
+        const stationNames = data.RESPONSE.RESULT[0].TrainStation
+        if(stationNames === undefined){
+            return []
+        }else{
+        response.push({signature: stationNames[0].LocationSignature, name: stationNames[0].AdvertisedLocationName})
+        for(let i = 1; i < stationNames.length; i++){
+            response.push({signature: stationNames[i].LocationSignature, name: stationNames[i].AdvertisedLocationName})
+        }
+    }
+    window.sessionStorage.setItem("stations", JSON.stringify(response))
     }
     return response
-    }
 }
 
 export const getStationSigns = async (station) => {
@@ -47,6 +96,11 @@ export const getStationSigns = async (station) => {
 
 export const getTrainById = async (id, date) => {
     const data = await getById(id, date)
+    const response = getTimetable(data)
+    return response
+}
+
+const getTimetable = (data) => {
     const activitys = data.RESPONSE.RESULT[0].TrainAnnouncement;
         var responseTemplate = {
             LocationSignature: activitys[0].LocationSignature,
@@ -160,4 +214,36 @@ export const getTrainById = async (id, date) => {
         }
         
         return response
+}
+
+const sortTrains = (data) => {
+    
+    var response = []
+
+    const responseTemplate = {
+        avgang: {},
+        ankomst: {}
+    }
+
+    data.map((activity) => {
+        if(activity.ActivityType === "Ankomst"){
+            for(let i = 0; i < response.length; i++){
+                if(activity.AdvertisedTrainIdent === response[i].avgang.AdvertisedTrainIdent){
+                    response[i].ankomst = activity
+                }
+            }
+        }else if(activity.ActivityType === "Avgang"){
+            let alredyIncludes = false
+            for(let i = 0; i < response.length; i++){
+                if(activity.AdvertisedTrainIdent === response[i].avgang.AdvertisedTrainIdent){
+                    alredyIncludes = true
+                }
+            }
+            if(!alredyIncludes){
+                response.push({...responseTemplate, avgang: activity})
+            }
+        }
+    })
+
+    return response
 }

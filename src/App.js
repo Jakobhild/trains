@@ -8,7 +8,7 @@ import Sidebar from './Sidebar';
 
 function App() {
   const [trains, setTrains] = useState([])
-  const [type, setType] = useState(1)
+  const [type, setType] = useState(2)
   const [dayOfset, setDayOfset] = useState(0)
   const [stationsSignature, setStationsSignature] = useState([])
   const [stations, setStations] = useState([])
@@ -28,14 +28,14 @@ function App() {
       let stationsArr = []
       if(data){
         data.map((train) => {
-          if(!stationsArr.includes(train.FromLocation[0].LocationName)){
-            stationsArr.push(train.FromLocation[0].LocationName)
+          if(!stationsArr.includes(train.ankomst.FromLocation[0].LocationName)){
+            stationsArr.push(train.ankomst.FromLocation[0].LocationName)
           }
-          if(!stationsArr.includes(train.ToLocation[0].LocationName)){
-            stationsArr.push(train.ToLocation[0].LocationName)
+          if(!stationsArr.includes(train.ankomst.ToLocation[0].LocationName)){
+            stationsArr.push(train.ankomst.ToLocation[0].LocationName)
           }
-          if(train.ViaFromLocation){
-            train.ViaFromLocation.map((location) => {
+          if(train.ankomst.ViaFromLocation){
+            train.ankomst.ViaFromLocation.map((location) => {
               if(!stationsArr.includes(location.LocationName)){
                 stationsArr.push(location.LocationName)
               }
@@ -108,7 +108,7 @@ function App() {
       <div className='schedule-container'>
         {trains ? <>
           {trains.map((train) => 
-            <TrainListing className='schedule-item' key={train.ActivityId} fromStation={type === 1 ? fromTo[1] : fromTo[0]} dayOfset={dayOfset} stations={stations} train={train} showTrainOverlay={(trainIdent, depDate) => showTrainOverlay(trainIdent, depDate)} /> 
+            <TrainListing className='schedule-item' key={train.ankomst.ActivityId} fromStation={type === 1 ? fromTo[1] : fromTo[0]} dayOfset={dayOfset} stations={stations} train={train.ankomst} depature={train.avgang} showTrainOverlay={(trainIdent, depDate) => showTrainOverlay(trainIdent, depDate)} /> 
           )}
         </> : <p>Det finns inga tåg som går vald sträcka</p>}  
       </div>
@@ -118,6 +118,17 @@ function App() {
 
 function TrainListing(props) {
 
+  const getActuallTime = (activityObj) => {
+    if(activityObj.TimeAtLocation){
+      return activityObj.TimeAtLocation
+    }else if(activityObj.PlannedEstimatedTimeAtLocationIsValid){
+      return activityObj.PlannedEstimatedTimeAtLocation
+    }else{
+      return activityObj.AdvertisedTimeAtLocation
+    }
+  } 
+
+
   const timeFromString = (timeString) => {
     const time = new Date(Date.parse(timeString))
     return time
@@ -125,49 +136,32 @@ function TrainListing(props) {
 
   const [late, setLate] = useState(false)
   const [dotColor, setDotColor] = useState("yellow")
-  const [depature, setDepature] = useState({
-                                            advertisedTime: timeFromString("2023-01-21T00:00:00.000+01:00"),
-                                            actualTime: timeFromString("2023-01-21T00:00:00.000+01:00"),
-                                            track: "0"
-                                          })
+
   const [lateDep, setLateDep] = useState(false)
 
-  
+  const advertisedTimeDep = new Date(Date.parse(props.depature.AdvertisedTimeAtLocation)) 
+  const actuallTimeDep = new Date(Date.parse(getActuallTime(props.depature)))
 
   const advertisedTime = new Date(Date.parse(props.train.AdvertisedTimeAtLocation))
-  const actualTime = new Date(Date.parse(props.train.TimeAtLocation))
+  const actuallTime = new Date(Date.parse(getActuallTime(props.train)))
 
+  
   useEffect(() => {
-    if(actualTime - advertisedTime > 5 * 60 * 1000){
+    if(actuallTime - advertisedTime > 5 * 60 * 1000){
       setLate("Försenat");
     }
-    if(actualTime - advertisedTime > 60 * 60 * 1000){
+    if(actuallTime - advertisedTime > 60 * 60 * 1000){
       setDotColor("red")
     }
     if(props.train.Canceled){
       setLate(props.train.Deviation[0].Description)
       setDotColor("red")
     }
-        getTrainById(props.train.AdvertisedTrainIdent, props.train.ScheduledDepartureDateTime)
-        .then(data => {
-          data.map((location) => {
-            if(location.LocationSignature === props.fromStation){
-              let dep = {
-                advertisedTime: timeFromString(location.AdvertisedTimeAvgang),
-                actualTime: timeFromString(location.ActuallTimeAvgang),
-                track: location.Track
-              }
-              setDepature(dep)
-            }
-          }) 
-        })
-  }, [])
-
-  useEffect(() => {
-    if(depature.actualTime - depature.advertisedTime > 5 * 60 * 1000){
+    if(actuallTimeDep - actuallTimeDep > 5 * 60 * 1000){
       setLateDep(true)
     }
-  }, [depature])
+  }, [])
+
 
   
 
@@ -185,12 +179,12 @@ function TrainListing(props) {
       <div style={{display: "flex", alignItems: "center"}}>
         <h1 style={{fontSize: "20px", margin: "0"}}>
           {lateDep ? <span>
-            <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{depature.advertisedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span> {depature.actualTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-          </span> : depature.advertisedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{advertisedTimeDep.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span> {actuallTimeDep.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+          </span> : advertisedTimeDep.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
           
           <span> &gt; </span>
-          {late==="Försenat" ? <span>
-            <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{advertisedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span> {actualTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+          {late ? <span>
+            <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{advertisedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span> {actuallTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
           </span> : advertisedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
 
 
@@ -198,13 +192,9 @@ function TrainListing(props) {
         
         <span className='left-aligned no-mobile'>
           <span> Från </span>
-          {props.stations.map((station) => 
-            <>{station.signature === props.train.FromLocation[0].LocationName && <span key={0}>{station.name}</span>}</>
-          )}
+          {props.stations[props.stations.findIndex((station) => station.signature === props.train.FromLocation[0].LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === props.train.FromLocation[0].LocationName)].name}</>}
           <span> mot </span>
-          {props.stations.map((station) => 
-            <>{station.signature === props.train.ToLocation[0].LocationName && <span key={0}>{station.name}</span>}</>
-          )}
+          {props.stations[props.stations.findIndex((station) => station.signature === props.train.ToLocation[0].LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === props.train.ToLocation[0].LocationName)].name}</>}
         </span>
         
       </div>
@@ -216,9 +206,7 @@ function TrainListing(props) {
         <span style={{marginRight: "5px"}}>Via</span>
         {props.train.ViaFromLocation.map((viaStation) => 
         <span key={viaStation.Order}>
-          {props.stations.map((station) => 
-            <>{station.signature === viaStation.LocationName && <>{station.name}</>}</>
-          )}
+          {props.stations[props.stations.findIndex((station) => station.signature === viaStation.LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === viaStation.LocationName)].name}</>}
           {viaStation.Order < props.train.ViaFromLocation.length - 2 && <>, </>} 
           {viaStation.Order === props.train.ViaFromLocation.length - 2 && <> och </>}
         </span>)}
@@ -228,14 +216,9 @@ function TrainListing(props) {
 
         <span className='mobile-only'>
           <span> Från </span>
-          {props.stations.map((station) => 
-            <>{station.signature === props.train.FromLocation[0].LocationName && <span key={0}>{station.name}</span>}</>
-          )}
+          {props.stations[props.stations.findIndex((station) => station.signature === props.train.FromLocation[0].LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === props.train.FromLocation[0].LocationName)].name}</>}
           <span> mot </span>
-          {props.stations.map((station) => 
-            <>{station.signature === props.train.ToLocation[0].LocationName && <span key={0}>{station.name}</span>}</>
-          )}
-         
+          {props.stations[props.stations.findIndex((station) => station.signature === props.train.ToLocation[0].LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === props.train.ToLocation[0].LocationName)].name}</>}
         </span>
       </div>
     </div>

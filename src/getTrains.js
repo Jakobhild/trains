@@ -1,4 +1,4 @@
-export const getTrainInfo = async (station, dateOfset, trainIdents) => {
+export const getTrainInfo = async (station, dateOfset, trainIdents, depStation) => {
     var now = new Date();
 
     now.setDate(now.getDate() + dateOfset)
@@ -17,8 +17,16 @@ export const getTrainInfo = async (station, dateOfset, trainIdents) => {
                 "<LOGIN authenticationkey='" + process.env.REACT_APP_API_KEY + "' />" +
                 "<QUERY objecttype='TrainAnnouncement' schemaversion='1.8' limit='100' orderby='AdvertisedTimeAtLocation asc' >" +
                     "<FILTER>" +
-                        "<EQ name='LocationSignature' value='"+ station +"' />" +
-                        "<EQ name='ActivityType' value='Ankomst'/>" +
+                        "<OR>" +
+                            "<AND>" +
+                                "<EQ name='LocationSignature' value='"+ station +"' />" +
+                                "<EQ name='ActivityType' value='Ankomst'/>" +
+                            "</AND>" +
+                            "<AND>" +
+                                "<EQ name='LocationSignature' value='"+ depStation +"' />" +
+                                "<EQ name='ActivityType' value='Avgang'/>" +
+                            "</AND>" +
+                        "</OR>" +
                         "<EQ name='ScheduledDepartureDateTime' value='2023-" + m + "-" + d + "T00:00:00.000+01:00' />" +
                         "<OR>"
                         trainIdents.map((id) => {req += "<EQ name='AdvertisedTrainIdent' value='" + id + "' />"})
