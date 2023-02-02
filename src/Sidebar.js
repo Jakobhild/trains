@@ -9,10 +9,14 @@ function Sidebar(props){
     const [ fromStationName, setFromStationName ] = useState("")
     const [ fromStationSign, setFromStationSign ] = useState("")
     const [ fromStationSelected, setFromStationSelected ] = useState(false)
+    const [ fromStationClass, setFromStationClass ] = useState("station-input")
 
     const [ toStationName, setToStationName ] = useState("")
     const [ toStationSign, setToStationSign ] = useState("")
     const [ toStationSelected, setToStationSelected ] = useState(false)
+    const [ toStationClass, setToStationClass ] = useState("station-input")
+
+    const [ rejectedSubmit, setRejectedSubmit ] = useState(false)
 
     useEffect(() => {
         setContainerClass("sidebar-container sidebar-container-final")
@@ -33,10 +37,20 @@ function Sidebar(props){
 
         const fromTo = Object.fromEntries(formData.entries());
         
-
-        props.setFromTo([fromStationSign, toStationSign])
-        props.setFromToNames([fromStationName, toStationName])
-        exit()
+        if(toStationSign && fromStationSign){
+            props.setFromTo([fromStationSign, toStationSign])
+            props.setFromToNames([fromStationName, toStationName])
+            exit()
+        }else{
+            setRejectedSubmit(true)
+            if(!toStationSign){
+                setToStationClass("station-input rejected-input")
+            }
+            if(!fromStationSign){
+                setFromStationClass("station-input rejected-input")
+            }
+        }
+        
     }
 
     const setFromStation = (newFromStationName, newFromStationSign) => {
@@ -62,25 +76,26 @@ function Sidebar(props){
                     <form onSubmit={handleSubmit}>
                         <label>
                         <span className='input-title'>Från:<br /></span>
-                        <input className='station-input' name='from' autoComplete='off' placeholder='Ex. Stockholm C' value={fromStationName} onChange={e => {setFromStationName(e.target.value); setFromStationSign("")}} onSelect={e => setFromStationSelected(true)} onBlur={e => setTimeout(() => {setFromStationSelected(false)}, 150)}/>
+                        <input className={fromStationClass} name='from' autoComplete='off' placeholder='Ex. Stockholm C' value={fromStationName} onChange={e => {setFromStationName(e.target.value); setFromStationSign("")}} onSelect={e => setFromStationSelected(true)} onBlur={e => setTimeout(() => {setFromStationSelected(false)}, 150)}/>
                         {fromStationSelected && fromStationName ? <div className='recomendation-box-container'><RecommendationBox station={fromStationName} setStation={(name, sign) => setFromStation(name, sign)} /></div>:<></>}
                         </label>
                         <label>
                         <span className='input-title'>Till:<br /></span>
-                        <input className='station-input' name='to' autoComplete='off' placeholder='Ex. Göteborg C' value={toStationName} onChange={e => {setToStationName(e.target.value); setToStationSign("")}} onSelect={e => setToStationSelected(true)} onBlur={e => setTimeout(() => {setToStationSelected(false)}, 150)}/>
+                        <input className={toStationClass} name='to' autoComplete='off' placeholder='Ex. Göteborg C' value={toStationName} onChange={e => {setToStationName(e.target.value); setToStationSign("")}} onSelect={e => setToStationSelected(true)} onBlur={e => setTimeout(() => {setToStationSelected(false)}, 150)}/>
                         {toStationSelected && toStationName ? <div className='recomendation-box-container'><RecommendationBox station={toStationName} setStation={(name, sign) => setToStation(name, sign)} /></div>:<></>}
                         </label>
                         <br />
-                        <button type='submit' className='submit-button'>Sök trafikinfo</button>
+                        <button type='submit' className='submit-button bold-btn'>Sök trafikinfo</button>
                     </form>
                 </div>
+                <button onClick={() => {window.sessionStorage.clear()}} className="delete-btn bold-btn">Ta bort sparad data</button>
             </div>
         </>
     )
 }
 
 function RecommendationBox(props){
-    const rek = ["Stockholm C", "Göteborg C", "Örebro C"]
+
     const [ recommendations, setRecommendations ] = useState([])
     const [ boxClass, setBoxClass ] = useState("recommendation-box recommendation-box-inital")
 

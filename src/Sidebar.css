@@ -104,3 +104,23 @@ label, form{
     }
   }
 
+.delete-btn{
+    border: 2px solid #cf222e;
+    border-radius: 10px;
+    max-width: 15vw;
+    margin: auto;
+}
+
+.delete-btn:hover{
+    background-color: #cf222e;
+    color: white;
+}
+
+.rejected-input{
+    border-color: #cf222e;
+    border-width: 2px;
+}
+
+.bold-btn{
+    font-weight: bold;
+}
