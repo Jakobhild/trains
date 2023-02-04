@@ -118,6 +118,10 @@ button{
   color: black;
 }
 
+.time-tab:after, .track-tab:after {
+  background-color: grey;
+}
+
 .selected{
   font-weight: bold;
 }
@@ -183,8 +187,14 @@ button{
   top: 30px;
   width: 20px;
   opacity: 0.5;
+  transition: transform 200ms linear 0ms;
 }
 
 .sidebar-button:hover{
   opacity: 1;
+  transform: rotate(30deg);
+}
+
+.progressBar{
+	margin-top: 100px;
 }

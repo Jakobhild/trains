@@ -8,6 +8,8 @@ import Sidebar from './Sidebar';
 
 function App() {
   const [trains, setTrains] = useState([])
+  const [apiLoaded, setApiLoaded] = useState(true)
+
   const [type, setType] = useState(2)
   const [dayOfset, setDayOfset] = useState(0)
   const [stationsSignature, setStationsSignature] = useState([])
@@ -22,9 +24,10 @@ function App() {
   const tabIndicatorLocations = ["left", "center", "right"]
 
   useEffect(() => {
-    
+    setApiLoaded(false)
     getTrains(type, dayOfset, fromTo[0], fromTo[1]).then((data) => {
       setTrains(data);
+      setApiLoaded(true)
       let stationsArr = []
       if(data){
         data.map((train) => {
@@ -106,11 +109,14 @@ function App() {
         </div>
       </div>
       <div className='schedule-container'>
+	{apiLoaded ? <>
         {trains ? <>
           {trains.map((train) => 
             <TrainListing className='schedule-item' key={train.ankomst.ActivityId} fromStation={type === 1 ? fromTo[1] : fromTo[0]} dayOfset={dayOfset} stations={stations} train={train.ankomst} depature={train.avgang} showTrainOverlay={(trainIdent, depDate) => showTrainOverlay(trainIdent, depDate)} /> 
           )}
-        </> : <p>Det finns inga tåg som går vald sträcka</p>}  
+	</> : <p>Det finns inga tåg som går vald sträcka</p>}</>
+	: <progress value={null} className='progressBar' />
+	}
       </div>
     </div>
   );
