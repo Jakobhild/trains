@@ -36,6 +36,10 @@
     transform: rotate(360deg);
   }
 }
+button{
+  background-color: transparent;
+}
+
 
 .backdrop{
   position: fixed;
@@ -113,7 +117,7 @@
 
 button{
   padding: 10px;
-  background-color: white;
+  background-color: transparent;
   border: none;
   color: black;
 }
@@ -197,4 +201,35 @@ button{
 
 .progressBar{
 	margin-top: 100px;
+}
+
+.side-menu{
+  position: fixed;
+  top: 45vh;
+  left: -5px;
+}
+
+.side-main-menu{
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 5px;
+  border: solid 1px #646464;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+}
+
+.side-extend-menu{
+  position: absolute;
+  width: max-content;
+  left: calc(20px + 3ex);
+  border: solid 1px #646464;
+  border-radius: 5px;
+  padding: 3px;
+  background-color: white;
+}
+
+.side-type-menu{
+  top: calc(40px + 1ex)
 }
