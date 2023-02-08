@@ -1,11 +1,15 @@
 import logo from './logo.svg';
-import sidebarBtn from './sidebar-btn.png';
+import sidebarBtnImg from './sidebar-btn.png';
+import leftRigthArrow from './left-right-arrow.jpg'
+import trainImg from './train.png'
+import calendarImg from './calendar.png'
 import './App.css';
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react';
 import Overlay from './Overlay.js';
 import { getTrains, getStations, getTrainById } from './utils';
 import Sidebar from './Sidebar';
 import './LoadingCircle.css'
+import TrainListing from './TrainListing';
 
 function App() {
   const [trains, setTrains] = useState([])
@@ -22,7 +26,22 @@ function App() {
   const [fromTo, setFromTo] = useState(["Cst", "Ör"])
   const [fromToNames, setFromToNames] = useState(["Stockholm C", "Örebro C"])
 
-  const tabIndicatorLocations = ["left", "center", "right"]
+  const [offset, setOffset] = useState(0);
+  const [showSideMenu, setShowSideMenu] = useState(false)
+
+  useEffect(() => {
+      const onScroll = () => setOffset(window.pageYOffset);
+      // clean up code
+      window.removeEventListener('scroll', onScroll);
+      window.addEventListener('scroll', onScroll, { passive: true });
+      return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if(offset > 200){
+      setShowSideMenu(true)
+    }
+  }, [offset])
 
   useEffect(() => {
     setApiLoaded(false)
@@ -73,184 +92,54 @@ function App() {
 
   return (
     <div className="App">
-      <img src={sidebarBtn} className='sidebar-button' onClick={() => setShowSidebar(true)}></img>
+      <img src={sidebarBtnImg} className='sidebar-button' onClick={() => setShowSidebar(true)}></img>
       {showOverlay && <>
-      <Overlay trainIdent={overlayTrainIdent} closeFunc={() => setShowOverlay(false)} date={overlayTrainDepDate}/>
+        <Overlay trainIdent={overlayTrainIdent} closeFunc={() => setShowOverlay(false)} date={overlayTrainDepDate}/>
       </>}
       {showSidebar && <>
         <Sidebar closeFunc={() => setShowSidebar(false)} setFromTo={(fromTo) => setFromTo(fromTo)} setFromToNames={(fromToNames) => setFromToNames(fromToNames)} />
       </>}
-      <LoadingCircle />
+      {showSideMenu && <>
+        <SideMenu dayOfset={dayOfset} setDayOfset={(n) => setDayOfset(n)} type={type} setType={(n) => setType(n)} fromToNames={fromToNames} offset={offset} setShowSideMenu={(e) => setShowSideMenu(e)} />
+      </>}
 
-      <SideMenu dayOfset={dayOfset} setDayOfset={(n) => setDayOfset(n)} type={type} setType={(n) => setType(n)} fromToNames={fromToNames} />
-      
       <h1>Tåg:</h1>
-      <div className='menu'>
-        <div>
-          <div className='tabs'>
-            <button className={dayOfset === -1 ? 'time-tab selected' : 'time-tab'} onClick={() => setDayOfset(-1)}>Igår</button>
-            <button className={dayOfset === 0 ? 'time-tab selected' : 'time-tab'} onClick={() => setDayOfset(0)}>Idag</button>
-            <button className={dayOfset === 1 ? 'time-tab selected' : 'time-tab'} onClick={() => setDayOfset(1)}>Imorgon</button>
-          </div>
-          <div className={'tab-indicator time-tab-indicator time-' + tabIndicatorLocations[dayOfset+1]}></div>
-        </div>
-      </div>
-      <div className='menu'>
-        <div>
-          <div className='tabs'>
-            <button className={type === 2 ? 'track-tab selected' : 'track-tab'} onClick={() => setType(2)}>
-              {fromToNames[0]}
-              <span> - </span>
-              {fromToNames[1]}
-            </button>
-            <button className={type === 1 ? 'track-tab selected' : 'track-tab'} onClick={() => setType(1)}>
-              {fromToNames[1]}
-              <span> - </span>
-              {fromToNames[0]}
-          </button>
-          </div>
-          <div className={'tab-indicator track-tab-indicator track-' + tabIndicatorLocations[type]}></div>
-        </div>
-      </div>
+      <DayMenu dayOfset={dayOfset} setDayOfset={(n) => setDayOfset(n)} />
+      <TypeMenu type={type} setType={(n) => setType(n)} fromToNames={fromToNames} />
       <div className='schedule-container'>
-	{apiLoaded ? <>
-        {trains ? <>
-          {trains.map((train) => 
-            <TrainListing className='schedule-item' key={train.ankomst.ActivityId} fromStation={type === 1 ? fromTo[1] : fromTo[0]} dayOfset={dayOfset} stations={stations} train={train.ankomst} depature={train.avgang} showTrainOverlay={(trainIdent, depDate) => showTrainOverlay(trainIdent, depDate)} /> 
-          )}
-	</> : <p>Det finns inga tåg som går vald sträcka</p>}</>
-	: <progress value={null} className='progressBar' />
-	}
+      {apiLoaded ? <>
+            {trains ? <>
+              {trains.map((train) => 
+                <TrainListing className='schedule-item' key={train.ankomst.ActivityId} fromStation={type === 1 ? fromTo[1] : fromTo[0]} dayOfset={dayOfset} stations={stations} train={train.ankomst} depature={train.avgang} showTrainOverlay={(trainIdent, depDate) => showTrainOverlay(trainIdent, depDate)} /> 
+              )}
+      </> : <p>Det finns inga tåg som går vald sträcka</p>}</>
+      : <LoadingCircle />
+	    }
       </div>
     </div>
   );
 }
 
-function TrainListing(props) {
-
-  const getActuallTime = (activityObj) => {
-    if(activityObj.TimeAtLocation){
-      return activityObj.TimeAtLocation
-    }else if(activityObj.PlannedEstimatedTimeAtLocationIsValid){
-      return activityObj.PlannedEstimatedTimeAtLocation
-    }else{
-      return activityObj.AdvertisedTimeAtLocation
-    }
-  } 
-
-
-  const timeFromString = (timeString) => {
-    const time = new Date(Date.parse(timeString))
-    return time
-  }
-
-  const [late, setLate] = useState(false)
-  const [dotColor, setDotColor] = useState("yellow")
-
-  const [depatureInfo, setDepartureInfo] = useState(false)
-
-  const [lateDep, setLateDep] = useState(false)
-
-  const advertisedTimeDep = new Date(Date.parse(props.depature.AdvertisedTimeAtLocation)) 
-  const actuallTimeDep = new Date(Date.parse(getActuallTime(props.depature)))
-
-  const advertisedTime = new Date(Date.parse(props.train.AdvertisedTimeAtLocation))
-  const actuallTime = new Date(Date.parse(getActuallTime(props.train)))
-
-  
-  useEffect(() => {
-    if(actuallTime - advertisedTime > 5 * 60 * 1000){
-      setLate("Försenat");
-    }
-    if(actuallTime - advertisedTime > 60 * 60 * 1000){
-      setDotColor("red")
-    }
-    if(props.train.Canceled){
-      setLate(props.train.Deviation[0].Description)
-      setDotColor("red")
-    }
-    if(actuallTimeDep - actuallTimeDep > 5 * 60 * 1000){
-      setLateDep(true)
-    }
-    if(props.depature.TimeAtLocation){
-      if(props.train.TimeAtLocation){
-        setDepartureInfo("Har ankommit")
-      }else{
-        setDepartureInfo("Har avgått")
-      }
-    }
-  }, [])
-
-
-  
-
-  return (
-    <div className='train-listing' onClick={() => props.showTrainOverlay(props.train.AdvertisedTrainIdent, props.train.ScheduledDepartureDateTime)}>
-       {/*Line one----------------------------------------------------------------------------------- */}
-      <div style={{display: "flex", alignItems: "center"}}>
-        <span>
-          <span>{props.train.ProductInformation ? <>{props.train.ProductInformation[0].Description}</> : <>{props.train.InformationOwner}</>}</span>
-          <span> ({props.train.AdvertisedTrainIdent})</span>
-        </span>
-        {late ? <span className='left-aligned'>{late}<span className={'status-dot ' + dotColor}></span></span> : <span className='left-aligned'>I tid<span className={'status-dot green'}></span></span>}
-      </div>
-      {/*Line two----------------------------------------------------------------------------------- */}
-      <div style={{display: "flex", alignItems: "center"}}>
-        <h1 style={{fontSize: "20px", margin: "0"}}>
-          {lateDep ? <span>
-            <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{advertisedTimeDep.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span> {actuallTimeDep.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-          </span> : advertisedTimeDep.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-          
-          <span> &gt; </span>
-          {late ? <span>
-            <span style={{textDecorationLine: "line-through", opacity: 0.5}}>{advertisedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} </span> {actuallTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-          </span> : advertisedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-
-
-        </h1>
-        
-        <span className='left-aligned no-mobile'>
-          <span> Från </span>
-          {props.stations[props.stations.findIndex((station) => station.signature === props.train.FromLocation[0].LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === props.train.FromLocation[0].LocationName)].name}</>}
-          <span> mot </span>
-          {props.stations[props.stations.findIndex((station) => station.signature === props.train.ToLocation[0].LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === props.train.ToLocation[0].LocationName)].name}</>}
-        </span>
-        
-      </div>
-      {/*Line three----------------------------------------------------------------------------------- */}
-      <div style={{display: "flex"}}>
-        
-      {props.train.ViaFromLocation ? 
-      <span className='no-mobile'>
-        <span style={{marginRight: "5px"}}>Via</span>
-        {props.train.ViaFromLocation.map((viaStation) => 
-        <span key={viaStation.Order}>
-          {props.stations[props.stations.findIndex((station) => station.signature === viaStation.LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === viaStation.LocationName)].name}</>}
-          {viaStation.Order < props.train.ViaFromLocation.length - 2 && <>, </>} 
-          {viaStation.Order === props.train.ViaFromLocation.length - 2 && <> och </>}
-        </span>)}
-      </span> : <span>Direkt</span>
-      }
-        
-
-        <span className='mobile-only'>
-          <span> Från </span>
-          {props.stations[props.stations.findIndex((station) => station.signature === props.train.FromLocation[0].LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === props.train.FromLocation[0].LocationName)].name}</>}
-          <span> mot </span>
-          {props.stations[props.stations.findIndex((station) => station.signature === props.train.ToLocation[0].LocationName)] && <>{props.stations[props.stations.findIndex((station) => station.signature === props.train.ToLocation[0].LocationName)].name}</>}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 
 function LoadingCircle(){
   const size = 100
+
+  const circleRef = useRef(null)
+
+  const [ circlePathLength, setCirclePathlength ] = useState();
+
+  useEffect(() => {
+    var pathLength = circleRef.current.getTotalLength()
+
+    setCirclePathlength(pathLength);
+    console.log(pathLength);
+  }, [])
+  
   return(
     <div className='loading-container' style={{width: size+10, heigth: size+10}}>
       <svg>
-        <circle cx={size/2+5} cy={size/2+5} r={size/2} className='loading-circle'/>
+        <circle cx={size/2+5} cy={size/2+5} r={size/2} ref={circleRef} className='loading-circle' />
       </svg>
     </div>
   )
@@ -262,6 +151,7 @@ export default App;
 function SideMenu(props) {
   const [ showDayMenu, setShowDayMenu ] = useState(false)
   const [ showTypeMenu, setShowTypeMenu ] = useState(false)
+  const [ menuLeftProp, setMenuLeftProp ] = useState("-50px") 
 
   const toggleDayMenu = () => {
     if(showDayMenu){
@@ -281,15 +171,55 @@ function SideMenu(props) {
     }
   }
 
+  const toggleType = () => {
+    window.scroll({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+    if(props.type === 1){
+      props.setType(2)
+    }else{
+      props.setType(1)
+    }
+  }
+
+  const setDayOfsetAndScroll = (n) => {
+    window.scroll({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+    props.setDayOfset(n)
+  }
+
+  useEffect(() => {
+    setTimeout(() => {
+      setMenuLeftProp("-5px")
+    }, 10)
+  }, [])
+
+  useEffect(() => {
+    if(props.offset < 200){
+      setMenuLeftProp("-50px")
+      setTimeout(() => {
+        props.setShowSideMenu(false)
+      }, 1000)
+    }
+  }, [props.offset])
+
   return(
-    <div className='side-menu no-mobile'>
-      {showDayMenu && <div className='side-extend-menu side-day-menu' onBlur={() => setShowDayMenu(false)}><DayMenu dayOfset={props.dayOfset} setDayOfset={(n) => props.setDayOfset(n)} /></div>}
-      {showTypeMenu && <div className='side-extend-menu side-type-menu' onBlur={() => setShowTypeMenu(false)}><TypeMenu type={props.type} setType={(n) => props.setType(n)} fromToNames={props.fromToNames} /></div>}
+    <>
+    {showTypeMenu || showDayMenu ? <div className='backdrop' onClick={() => {setShowTypeMenu(false); setShowDayMenu(false)}} style={{opacity: "0"}}></div> : <></>}
+    <div className='side-menu no-mobile' style={{left: menuLeftProp}}>
+      {showDayMenu && <div className='side-extend-menu side-day-menu' onBlur={() => setShowDayMenu(false)} onClick={() => setShowDayMenu(false)}><DayMenu dayOfset={props.dayOfset} setDayOfset={(n) => setDayOfsetAndScroll(n)} /></div>}
+      {showTypeMenu && <div className='side-extend-menu side-type-menu' onBlur={() => setShowTypeMenu(false)} onClick={() => setShowTypeMenu(false)}><TypeMenu type={props.type} setType={(n) => props.setType(n)} fromToNames={props.fromToNames} /></div>}
       <div className='side-main-menu'>
-        <button onClick={() => toggleDayMenu()} >Dag</button>
-        <button onClick={() => toggleTypeMenu()}>Tåg</button>
+        <img src={calendarImg} onClick={() => toggleDayMenu()} className='side-menu-btn' />
+        <img src={trainImg} onClick={() => toggleType()} className='side-menu-btn' />
       </div>
     </div>
+    </>
   )
 }
 

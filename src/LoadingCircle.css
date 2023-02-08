@@ -4,6 +4,7 @@
     fill: transparent;
     r: 50;
     animation: stroke-animation 1.5s ease-in-out 0s infinite alternate;
+    -webkit-animation: stroke-animation 1.5s ease-in-out 0s infinite alternate;
     margin: auto;
 }
   
@@ -11,21 +12,42 @@
     height: 110px;
     width: 110px;
     margin: 10%;
-    animation: container-spin 2s ease-in-out 0s infinite;
+    animation: container-spin 1.5s linear 0s infinite;
+    -webkit-animation: container-spin 1.5s linear 0s infinite;
 }
 
 @keyframes stroke-animation {
     0% {
-        stroke-dasharray: 1, 200;
+        stroke-dasharray: 1, 313;
         stroke-dashoffset: 0;
     }
     100% {
-        stroke-dasharray: 89, 200;
-        stroke-dashoffset: 130;
+        stroke-dasharray: 250, 63;
+        stroke-dashoffset: 125;
+    }
+}
+
+@-webkit-keyframes stroke-animation {
+    0% {
+        stroke-dasharray: 1, 313;
+        stroke-dashoffset: 0;
+    }
+    100% {
+        stroke-dasharray: 250, 63;
+        stroke-dashoffset: 125;
     }
 }
 
 @keyframes container-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes container-spin {
     0% {
         transform: rotate(0deg);
     }
