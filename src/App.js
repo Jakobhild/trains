@@ -81,6 +81,9 @@ function App() {
         <Sidebar closeFunc={() => setShowSidebar(false)} setFromTo={(fromTo) => setFromTo(fromTo)} setFromToNames={(fromToNames) => setFromToNames(fromToNames)} />
       </>}
       <LoadingCircle />
+
+      <SideMenu dayOfset={dayOfset} setDayOfset={(n) => setDayOfset(n)} type={type} setType={(n) => setType(n)} fromToNames={fromToNames} />
+      
       <h1>Tåg:</h1>
       <div className='menu'>
         <div>
@@ -144,6 +147,8 @@ function TrainListing(props) {
   const [late, setLate] = useState(false)
   const [dotColor, setDotColor] = useState("yellow")
 
+  const [depatureInfo, setDepartureInfo] = useState(false)
+
   const [lateDep, setLateDep] = useState(false)
 
   const advertisedTimeDep = new Date(Date.parse(props.depature.AdvertisedTimeAtLocation)) 
@@ -166,6 +171,13 @@ function TrainListing(props) {
     }
     if(actuallTimeDep - actuallTimeDep > 5 * 60 * 1000){
       setLateDep(true)
+    }
+    if(props.depature.TimeAtLocation){
+      if(props.train.TimeAtLocation){
+        setDepartureInfo("Har ankommit")
+      }else{
+        setDepartureInfo("Har avgått")
+      }
     }
   }, [])
 
@@ -245,3 +257,81 @@ function LoadingCircle(){
 }
 
 export default App;
+
+
+function SideMenu(props) {
+  const [ showDayMenu, setShowDayMenu ] = useState(false)
+  const [ showTypeMenu, setShowTypeMenu ] = useState(false)
+
+  const toggleDayMenu = () => {
+    if(showDayMenu){
+      setShowDayMenu(false)
+    }else{
+      setShowDayMenu(true)
+      setShowTypeMenu(false)
+    }
+  }
+
+  const toggleTypeMenu = () => {
+    if(showTypeMenu){
+      setShowTypeMenu(false)
+    }else{
+      setShowTypeMenu(true)
+      setShowDayMenu(false)
+    }
+  }
+
+  return(
+    <div className='side-menu no-mobile'>
+      {showDayMenu && <div className='side-extend-menu side-day-menu' onBlur={() => setShowDayMenu(false)}><DayMenu dayOfset={props.dayOfset} setDayOfset={(n) => props.setDayOfset(n)} /></div>}
+      {showTypeMenu && <div className='side-extend-menu side-type-menu' onBlur={() => setShowTypeMenu(false)}><TypeMenu type={props.type} setType={(n) => props.setType(n)} fromToNames={props.fromToNames} /></div>}
+      <div className='side-main-menu'>
+        <button onClick={() => toggleDayMenu()} >Dag</button>
+        <button onClick={() => toggleTypeMenu()}>Tåg</button>
+      </div>
+    </div>
+  )
+}
+
+function DayMenu(props) {
+
+  const tabIndicatorLocations = ["left", "center", "right"]
+
+  return(
+    <div className='menu'>
+      <div>
+        <div className='tabs'>
+          <button className={props.dayOfset === -1 ? 'time-tab selected' : 'time-tab'} onClick={() => props.setDayOfset(-1)}>Igår</button>
+          <button className={props.dayOfset === 0 ? 'time-tab selected' : 'time-tab'} onClick={() => props.setDayOfset(0)}>Idag</button>
+          <button className={props.dayOfset === 1 ? 'time-tab selected' : 'time-tab'} onClick={() => props.setDayOfset(1)}>Imorgon</button>
+        </div>
+        <div className={'tab-indicator time-tab-indicator time-' + tabIndicatorLocations[props.dayOfset+1]}></div>
+      </div>
+    </div>
+  )
+}
+
+function TypeMenu(props) {
+
+  const tabIndicatorLocations = ["left", "center", "right"]
+
+  return(
+    <div className='menu'>
+      <div>
+        <div className='tabs'>
+          <button className={props.type === 2 ? 'track-tab selected' : 'track-tab'} onClick={() => props.setType(2)}>
+            {props.fromToNames[0]}
+            <span> - </span>
+            {props.fromToNames[1]}
+          </button>
+          <button className={props.type === 1 ? 'track-tab selected' : 'track-tab'} onClick={() => props.setType(1)}>
+            {props.fromToNames[1]}
+            <span> - </span>
+            {props.fromToNames[0]}
+        </button>
+        </div>
+        <div className={'tab-indicator track-tab-indicator track-' + tabIndicatorLocations[props.type]}></div>
+      </div>
+    </div>
+  )
+}
