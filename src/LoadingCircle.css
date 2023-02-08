@@ -1,0 +1,35 @@
+.loading-circle{
+    stroke: blue;
+    stroke-width: 5px;
+    fill: transparent;
+    r: 50;
+    animation: stroke-animation 1.5s ease-in-out 0s infinite alternate;
+    margin: auto;
+}
+  
+.loading-container{
+    height: 110px;
+    width: 110px;
+    margin: 10%;
+    animation: container-spin 2s ease-in-out 0s infinite;
+}
+
+@keyframes stroke-animation {
+    0% {
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+    }
+    100% {
+        stroke-dasharray: 89, 200;
+        stroke-dashoffset: 130;
+    }
+}
+
+@keyframes container-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}

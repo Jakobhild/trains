@@ -5,6 +5,7 @@ import { useEffect, useReducer, useState } from 'react';
 import Overlay from './Overlay.js';
 import { getTrains, getStations, getTrainById } from './utils';
 import Sidebar from './Sidebar';
+import './LoadingCircle.css'
 
 function App() {
   const [trains, setTrains] = useState([])
@@ -79,7 +80,7 @@ function App() {
       {showSidebar && <>
         <Sidebar closeFunc={() => setShowSidebar(false)} setFromTo={(fromTo) => setFromTo(fromTo)} setFromToNames={(fromToNames) => setFromToNames(fromToNames)} />
       </>}
-      
+      <LoadingCircle />
       <h1>Tåg:</h1>
       <div className='menu'>
         <div>
@@ -229,6 +230,18 @@ function TrainListing(props) {
       </div>
     </div>
   );
+}
+
+
+function LoadingCircle(){
+  const size = 100
+  return(
+    <div className='loading-container' style={{width: size+10, heigth: size+10}}>
+      <svg>
+        <circle cx={size/2+5} cy={size/2+5} r={size/2} className='loading-circle'/>
+      </svg>
+    </div>
+  )
 }
 
 export default App;
