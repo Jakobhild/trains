@@ -127,3 +127,9 @@ label, form{
 .bold-btn{
     font-weight: bold;
 }
+
+.calendar-controls{
+	display: flex;
+	flex-direction: row;
+	Justify-content: space-around;
+}

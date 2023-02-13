@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useReducer } from 'react'
 import './Sidebar.css'
 import { getStationSigns } from './utils'
 
@@ -15,6 +15,20 @@ function Sidebar(props){
     const [ toStationSign, setToStationSign ] = useState("")
     const [ toStationSelected, setToStationSelected ] = useState(false)
     const [ toStationClass, setToStationClass ] = useState("station-input")
+
+	const [ showCalendar, setShowCalendar ] = useState(false)
+
+	const [ tempDate, setTempDate ] = useReducer((prev, next) => {
+		const now = new Date()
+		var newDate = new Date(next[0], next[1], next[2])
+//		if(newDate.getDate() < new Date().setDate(now.getDate()-1).getDate() && newDate.getMonth() <= now.getMonth() && newDate.getYear() <= now.getYear()){
+	//		newDate = now
+//		}
+			setTimeout(() => {
+					setShowCalendar(true)
+			}, 150)
+		return newDate;
+	},new Date())
 
     const [ rejectedSubmit, setRejectedSubmit ] = useState(false)
 
@@ -83,8 +97,15 @@ function Sidebar(props){
                         <span className='input-title'>Till:<br /></span>
                         <input className={toStationClass} name='to' autoComplete='off' placeholder='Ex. Göteborg C' value={toStationName} onChange={e => {setToStationName(e.target.value); setToStationSign("")}} onSelect={e => setToStationSelected(true)} onBlur={e => setTimeout(() => {setToStationSelected(false)}, 150)}/>
                         {toStationSelected && toStationName ? <div className='recomendation-box-container'><RecommendationBox station={toStationName} setStation={(name, sign) => setToStation(name, sign)} /></div>:<></>}
-                        </label>
+						</label>
                         <br />
+						<label>
+							<span>Datum:<br /></span>
+							<input name='date' autoComplete='off' value={tempDate} onSelect={e => setShowCalendar(true)}/>
+							{showCalendar && <div className='recomendatioon-box-container' onBlur={e => setShowCalendar(false)}>
+									<Calendar date={tempDate} setDate={date => setTempDate(date)} />
+							</div> }
+						</label>
                         <button type='submit' className='submit-button bold-btn'>Sök trafikinfo</button>
                     </form>
                 </div>
@@ -117,6 +138,68 @@ function RecommendationBox(props){
             )}
         </div>
     )
+}
+
+function Calendar(props){
+
+	const months = ["Januari", "Februari", "Mars", "April", "Maj", "Juni", "Juli", "Augusti", "September", "Oktober", "November", "December"]
+
+	const getDaysInMonth = (month, year) => {
+		return new Date(year, month+1, 0).getDate();
+	}
+
+	const getFirstDayInMonth = (month, year) => {
+		return new Date(year, month, 1).getDay();
+	}
+
+	const getCalendarArray = (dateObj) => {
+		const daysInMonth = getDaysInMonth(dateObj.getMonth(), dateObj.getYear())
+		const firstDayInMonth = getFirstDayInMonth(dateObj.getMonth(), dateObj.getYear())
+		
+		var response = []
+
+		response.push(new Array(7).fill("").map((value, index) => {
+			if(index <= firstDayInMonth){
+				return ""
+			}else{
+				return index-firstDayInMonth + ""
+			}
+		}))
+
+
+		for(let i = 7-firstDayInMonth; i <= daysInMonth; i++){
+			if((i+firstDayInMonth)%7 === 0){
+				response.push([i + ""])
+			}else{
+				response[response.length-1].push(i + "")
+			}
+		}
+
+		return response;
+	}
+
+
+	const [ boxClass, setBoxClass ] = useState("recommendation-box recommendation-box-inital")
+	const [ month, setMonth ] = useState(props.date.getMonth())
+	
+	useEffect(() => {
+		setBoxClass("recommendation-box")
+	}, [])
+
+	return(
+		<div className={boxClass}>
+				<div className="calendar-controls">
+					<div onClick={() => props.setDate([props.date.getFullYear(), props.date.getMonth()-1, 1])}>&#60; </div>
+					<div>{months[props.date.getMonth()]}</div>
+					<div onClick={() => props.setDate([props.date.getFullYear(), props.date.getMonth()+1, 1])}> &#62;</div>
+				</div>
+				<table>
+					{getCalendarArray(props.date).map((week, wIndex) => (<tr key={wIndex+100}>
+							{week.map((day, dIndex) => <td>{day}</td>)}
+					</tr>))}
+				</table>
+		</div>
+	)
 }
 
 export default Sidebar
