@@ -97,7 +97,7 @@ function App() {
         <Overlay trainIdent={overlayTrainIdent} closeFunc={() => setShowOverlay(false)} date={overlayTrainDepDate}/>
       </>}
       {showSidebar && <>
-        <Sidebar closeFunc={() => setShowSidebar(false)} setFromTo={(fromTo) => setFromTo(fromTo)} setFromToNames={(fromToNames) => setFromToNames(fromToNames)} />
+        <Sidebar closeFunc={() => setShowSidebar(false)} setFromTo={(fromTo) => setFromTo(fromTo)} setFromToNames={(fromToNames) => setFromToNames(fromToNames)} setDayOfset={(n) => setDayOfset(n)}/>
       </>}
       {showSideMenu && <>
         <SideMenu dayOfset={dayOfset} setDayOfset={(n) => setDayOfset(n)} type={type} setType={(n) => setType(n)} fromToNames={fromToNames} offset={offset} setShowSideMenu={(e) => setShowSideMenu(e)} />
@@ -225,17 +225,79 @@ function SideMenu(props) {
 
 function DayMenu(props) {
 
-  const tabIndicatorLocations = ["left", "center", "right"]
+  const [ dateOption4, setDateOption4 ] = useState(false)
+  const [ menuLeftOffset, setMenuLeftOffset] = useState(0)
+  const [ tabIndicatorLeftOffset, setTabIndicatorLeftOffset] = useState(0)
+
+  const getDateString = (offset) => {
+    var date = new Date()
+    date.setDate(date.getDate()+props.dayOfset+offset)
+    if(props.dayOfset === -1){
+      if(props.dayOfset+offset === -2){
+        return "Igår"
+      }else if(props.dayOfset+offset === -1){
+        return "Idag"
+      }else if(props.dayOfset+offset === 0){
+        return "Imorgon"
+      }
+    }
+    if(props.dayOfset+offset === -1){
+      return "Igår"
+    }else if(props.dayOfset+offset === 0){
+      return "Idag"
+    }else if(props.dayOfset+offset === 1){
+      return "Imorgon"
+    }
+    var month = (date.getMonth()+1) + "";
+    var day = date.getDate() + "";
+    if(date.getMonth()+1 < 10){
+        month = "0" + (date.getMonth()+1)
+    }
+    if(date.getDate() < 10){
+        day = "0" + date.getDate()
+    }
+    var response = date.getFullYear() + "-" + month + "-" + day;
+    return response
+}
+
+const getTabIndicatorOffset = (offset) => {
+  if(offset === -1){
+    return 0
+  }else{
+    return 1
+  }
+}
+
+const handleClick = (offset) => {
+  if(!(props.dayOfset === 0 && offset === -1)){
+    if(props.dayOfset !== -1){
+      setDateOption4(true)
+      setMenuLeftOffset(0)
+      setTabIndicatorLeftOffset(offset)
+    }
+  }
+  setTimeout(() => {
+    if(props.dayOfset === -1){
+      props.setDayOfset(props.dayOfset + offset + 1)
+    }else{
+      props.setDayOfset(props.dayOfset + offset)
+    }
+    setMenuLeftOffset(0)
+    setDateOption4(false)
+    setTabIndicatorLeftOffset(0)
+  }, 300)
+}
 
   return(
-    <div className='menu'>
-      <div>
+    <div className='menu day-menu-container'>
+      <div className='day-menu-window' style={{left: 70*menuLeftOffset}}>
         <div className='tabs'>
-          <button className={props.dayOfset === -1 ? 'time-tab selected' : 'time-tab'} onClick={() => props.setDayOfset(-1)}>Igår</button>
-          <button className={props.dayOfset === 0 ? 'time-tab selected' : 'time-tab'} onClick={() => props.setDayOfset(0)}>Idag</button>
-          <button className={props.dayOfset === 1 ? 'time-tab selected' : 'time-tab'} onClick={() => props.setDayOfset(1)}>Imorgon</button>
+          <button className={props.dayOfset === -1 ? 'time-tab selected' : 'time-tab'} onClick={() => handleClick(-1)}>{getDateString(-1)}</button>
+          <button className={props.dayOfset > -1 ? 'time-tab selected' : 'time-tab'} onClick={() => handleClick(0)}>{getDateString(0)}</button>
+          <button className='time-tab' onClick={() => handleClick(1)}>{getDateString(1)}</button>
+          {dateOption4 && <button className='time-tab' onClick={() => handleClick(2)}>{getDateString(2)}</button>}
         </div>
-        <div className={'tab-indicator time-tab-indicator time-' + tabIndicatorLocations[props.dayOfset+1]}></div>
+        <div className='tab-indicator time-tab-indicator' style={{left: 70*tabIndicatorLeftOffset+70}}></div>
       </div>
     </div>
   )

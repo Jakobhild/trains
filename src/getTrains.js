@@ -47,7 +47,9 @@ export const getTrainIdents = async (station1r, station2r, dateOfset) => {
     var station2 = station2r
     var now = new Date();
 
-    now.setDate(now.getDate() + dateOfset)
+    now.setDate(now.getDate() + dateOfset);
+    
+    console.log(now);
 
     let d = now.getDate() + "";
     if(d < 10){

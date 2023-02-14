@@ -21,7 +21,7 @@
 .sidebar-content-container{
     display: flex;
     flex-direction: column;
-    padding: 10%;
+    padding: 3vw;
     justify-content: space-around;
     height: 15vh;
 }
@@ -133,3 +133,36 @@ label, form{
 	flex-direction: row;
 	Justify-content: space-around;
 }
+
+.calendar-contols-item{
+    padding: 15px;
+    margin: 5px;
+    border-radius: 10%;
+    font-weight: bold;
+}
+
+.calendar-contols-item:hover{
+    background-color: lightgrey;
+}
+
+.calendar-box{
+    width: calc(100% - 40px - 4vw);
+}
+
+.calendar-day-item{
+    border: none;
+    cursor: pointer;
+}
+
+.selected-day{
+    border-radius: 50%;
+    background-color: green;
+    color: white;
+}
+
+.impossible-day{
+    text-decoration-line: line-through; 
+    opacity: 0.5;
+    cursor: default;
+}
+

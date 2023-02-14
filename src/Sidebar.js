@@ -21,12 +21,11 @@ function Sidebar(props){
 	const [ tempDate, setTempDate ] = useReducer((prev, next) => {
 		const now = new Date()
 		var newDate = new Date(next[0], next[1], next[2])
-//		if(newDate.getDate() < new Date().setDate(now.getDate()-1).getDate() && newDate.getMonth() <= now.getMonth() && newDate.getYear() <= now.getYear()){
-	//		newDate = now
-//		}
-			setTimeout(() => {
-					setShowCalendar(true)
-			}, 150)
+        var yesterday = new Date()
+        yesterday.setDate(yesterday.getDate()-1)
+		if(newDate.getDate() < yesterday.getDate() && newDate.getMonth() <= now.getMonth() && newDate.getYear() <= now.getYear()){
+			newDate = now
+		}
 		return newDate;
 	},new Date())
 
@@ -45,7 +44,6 @@ function Sidebar(props){
 
     function handleSubmit(e) {
         e.preventDefault();
-        
         const form = e.target;
         const formData = new FormData(form)
 
@@ -54,6 +52,11 @@ function Sidebar(props){
         if(toStationSign && fromStationSign){
             props.setFromTo([fromStationSign, toStationSign])
             props.setFromToNames([fromStationName, toStationName])
+            let now = new Date()
+            let difference = tempDate.getTime() - now.getTime();
+            let totalDays = Math.ceil(difference / (1000 * 3600 * 24))
+            console.log(typeof totalDays);
+            props.setDayOfset(totalDays)
             exit()
         }else{
             setRejectedSubmit(true)
@@ -81,6 +84,19 @@ function Sidebar(props){
         }, 150)
     }
 
+    const getDateString = () => {
+        var month = (tempDate.getMonth()+1) + "";
+        var day = tempDate.getDate() + "";
+        if(tempDate.getMonth()+1 < 10){
+            month = "0" + (tempDate.getMonth()+1)
+        }
+        if(tempDate.getDate() < 10){
+            day = "0" + tempDate.getDate()
+        }
+        var response = tempDate.getFullYear() + "-" + month + "-" + day;
+        return response
+    }
+
     return(
         <>
             <div onClick={() => exit()} className='backdrop' style={!backdrop ? {opacity: 0} : {}}></div>
@@ -101,11 +117,11 @@ function Sidebar(props){
                         <br />
 						<label>
 							<span>Datum:<br /></span>
-							<input name='date' autoComplete='off' value={tempDate} onSelect={e => setShowCalendar(true)}/>
-							{showCalendar && <div className='recomendatioon-box-container' onBlur={e => setShowCalendar(false)}>
-									<Calendar date={tempDate} setDate={date => setTempDate(date)} />
-							</div> }
+							<input className='station-input' name='date' autoComplete='off' value={getDateString()} onSelect={e => {setShowCalendar(true)}}/>
 						</label>
+                        {showCalendar && <div className='recomendatioon-box-container calendar-container' onBlur={e => setShowCalendar(false)}>
+									<Calendar date={tempDate} setDate={date => setTempDate(date)} setShowCalendar={(v) => setShowCalendar(v)} />
+						</div> }
                         <button type='submit' className='submit-button bold-btn'>Sök trafikinfo</button>
                     </form>
                 </div>
@@ -178,27 +194,50 @@ function Calendar(props){
 		return response;
 	}
 
+    const getDayClass = (day) => {
+        var yesterday = new Date()
+        yesterday.setDate(yesterday.getDate()-1)
+        var className = "calendar-day-item"
+        if(day === props.date.getDate() + ""){
+            className += " selected-day"
+        }else if(day < yesterday.getDate() && props.date.getMonth() <= yesterday.getMonth()){
+            className += " impossible-day"
+        }
+        return className
+    }
 
-	const [ boxClass, setBoxClass ] = useState("recommendation-box recommendation-box-inital")
+    const handleDateClick = (day) => {
+        var yesterday = new Date()
+        yesterday.setDate(yesterday.getDate()-1)
+        if(!(day < yesterday.getDate() && props.date.getMonth() <= yesterday.getMonth())){
+            props.setDate([props.date.getFullYear(), props.date.getMonth(), day])
+            props.setShowCalendar(false)
+        }
+    }
+
+	const [ boxClass, setBoxClass ] = useState("recommendation-box recommendation-box-inital calendar-box")
 	const [ month, setMonth ] = useState(props.date.getMonth())
 	
 	useEffect(() => {
-		setBoxClass("recommendation-box")
+		setBoxClass("recommendation-box calendar-box")
 	}, [])
 
 	return(
+        <>
+        <div className='backdrop' style={{opacity: 0}} onClick={() => props.setShowCalendar(false)}></div>
 		<div className={boxClass}>
-				<div className="calendar-controls">
-					<div onClick={() => props.setDate([props.date.getFullYear(), props.date.getMonth()-1, 1])}>&#60; </div>
-					<div>{months[props.date.getMonth()]}</div>
-					<div onClick={() => props.setDate([props.date.getFullYear(), props.date.getMonth()+1, 1])}> &#62;</div>
+				<div className="calendar-controls ">
+					<div onClick={() => props.setDate([props.date.getFullYear(), props.date.getMonth()-1, 1])} className='calendar-contols-item'>&#60; </div>
+					<div className='calendar-contols-item'>{months[props.date.getMonth()]}</div>
+					<div onClick={() => props.setDate([props.date.getFullYear(), props.date.getMonth()+1, 1])} className='calendar-contols-item'> &#62;</div>
 				</div>
 				<table>
 					{getCalendarArray(props.date).map((week, wIndex) => (<tr key={wIndex+100}>
-							{week.map((day, dIndex) => <td>{day}</td>)}
+							{week.map((day, dIndex) => <td key={dIndex} className={getDayClass(day)} onClick={() => handleDateClick(day)}>{day}</td>)}
 					</tr>))}
 				</table>
 		</div>
+        </>
 	)
 }
 
